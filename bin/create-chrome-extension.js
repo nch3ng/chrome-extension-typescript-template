@@ -158,8 +158,17 @@ const excludePatterns = [
   "package-lock.json",
 ];
 
-function shouldExclude(filePath) {
-  return excludePatterns.some((pattern) => filePath.includes(pattern));
+function shouldExclude(filePath, templateRoot) {
+  // Get relative path from template root to avoid false positives
+  // (e.g., when package is installed in node_modules)
+  const relativePath = path.relative(templateRoot || templateDir, filePath);
+  const basename = path.basename(filePath);
+
+  // Check if the relative path or basename matches exclude patterns
+  return excludePatterns.some((pattern) => {
+    // Match if pattern is in the relative path or matches the basename
+    return relativePath.includes(pattern) || basename === pattern;
+  });
 }
 
 function copyRecursive(src, dest) {
@@ -168,7 +177,7 @@ function copyRecursive(src, dest) {
   const stat = fs.statSync(src);
 
   if (stat.isDirectory()) {
-    if (shouldExclude(src)) return;
+    if (shouldExclude(src, templateDir)) return;
 
     fs.mkdirSync(dest, { recursive: true });
     const entries = fs.readdirSync(src);
@@ -177,12 +186,15 @@ function copyRecursive(src, dest) {
       const srcPath = path.join(src, entry);
       const destPath = path.join(dest, entry);
 
-      if (!shouldExclude(srcPath)) {
+      if (!shouldExclude(srcPath, templateDir)) {
         copyRecursive(srcPath, destPath);
       }
     }
   } else {
-    if (!shouldExclude(src)) {
+    if (!shouldExclude(src, templateDir)) {
+      // Ensure parent directory exists before copying file
+      const destDir = path.dirname(dest);
+      fs.mkdirSync(destDir, { recursive: true });
       fs.copyFileSync(src, dest);
     }
   }
@@ -191,6 +203,7 @@ function copyRecursive(src, dest) {
 // Copy files
 log("📁 Copying template files...", "blue");
 log(`  Template directory: ${templateDir}`, "blue");
+log(`  Project directory: ${projectDir}`, "blue");
 let copiedCount = 0;
 for (const item of filesToCopy) {
   const srcPath = path.join(templateDir, item);
@@ -199,10 +212,16 @@ for (const item of filesToCopy) {
   if (fs.existsSync(srcPath)) {
     try {
       copyRecursive(srcPath, destPath);
-      copiedCount++;
-      log(`  ✓ Copied ${item}`, "green");
+      // Verify the copy actually worked
+      if (fs.existsSync(destPath)) {
+        copiedCount++;
+        log(`  ✓ Copied ${item}`, "green");
+      } else {
+        log(`  ✗ Copy failed for ${item} - destination doesn't exist`, "red");
+      }
     } catch (err) {
       log(`  ✗ Failed to copy ${item}: ${err.message}`, "red");
+      log(`     Stack: ${err.stack}`, "red");
     }
   } else {
     log(`  ⚠ Skipped ${item} (not found at ${srcPath})`, "yellow");
@@ -213,6 +232,7 @@ if (copiedCount === 0) {
   error(
     `No files were copied!\n` +
       `Template directory: ${templateDir}\n` +
+      `Project directory: ${projectDir}\n` +
       `Files checked: ${filesToCopy.join(", ")}\n` +
       `Please verify the package was installed correctly and contains all template files.`
   );

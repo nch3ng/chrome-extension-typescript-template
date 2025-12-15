@@ -27,12 +27,34 @@ function error(message) {
   process.exit(1);
 }
 
+// Check for version flag
+const args = process.argv.slice(2);
+if (args.includes("-v") || args.includes("--version")) {
+  try {
+    // Try to get version from package.json
+    let packageJsonPath;
+    try {
+      packageJsonPath = require.resolve("create-chrome-ext-ts/package.json");
+    } catch (e) {
+      // Fallback to local package.json
+      packageJsonPath = path.join(__dirname, "..", "package.json");
+    }
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
+    console.log(packageJson.version);
+    process.exit(0);
+  } catch (e) {
+    console.log("1.1.1"); // Fallback version
+    process.exit(0);
+  }
+}
+
 // Get project name from command line
-const projectName = process.argv[2];
+const projectName = args[0];
 
 if (!projectName) {
   error("Project name is required");
   console.log("Usage: npx create-chrome-ext-ts <project-name>");
+  console.log("       npx create-chrome-ext-ts -v    # Show version");
   process.exit(1);
 }
 

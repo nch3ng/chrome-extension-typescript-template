@@ -16,6 +16,14 @@ Example:
 npx create-chrome-ext-ts my-awesome-extension
 ```
 
+Check the version:
+
+```bash
+npx create-chrome-ext-ts -v
+# or
+npx create-chrome-ext-ts --version
+```
+
 This will:
 
 - Create a new directory with your project name in the current directory

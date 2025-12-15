@@ -44,21 +44,32 @@ if (!/^[a-zA-Z0-9_-]+$/.test(projectName)) {
 }
 
 // Find the template directory
-// When run via npx, we need to find the package root
-// __dirname will be the bin directory, so go up to find package root
-let templateDir = path.join(__dirname, "..");
+// When installed via npm/npx, we need to find where the package is located
+let templateDir;
 
-// Verify this is the correct package by checking for template files
-if (
-  !fs.existsSync(path.join(templateDir, "src")) ||
-  !fs.existsSync(path.join(templateDir, "manifest.json"))
-) {
-  // Try alternative paths (for npx installations)
+// First, try to resolve the package.json using require.resolve
+// This works when the package is installed via npm/npx
+try {
+  const packageJsonPath = require.resolve("create-chrome-ext-ts/package.json");
+  templateDir = path.dirname(packageJsonPath);
+} catch (e) {
+  // Fallback: __dirname will be the bin directory, so go up to find package root
+  // This works for local development
+  templateDir = path.join(__dirname, "..");
+}
+
+// Verify template directory has required files
+const srcPath = path.join(templateDir, "src");
+const manifestPath = path.join(templateDir, "manifest.json");
+
+if (!fs.existsSync(srcPath) || !fs.existsSync(manifestPath)) {
+  // Try alternative paths as last resort
   const possiblePaths = [
     path.join(__dirname, "..", "..", "..", "create-chrome-ext-ts"),
     path.join(__dirname, "..", "..", "create-chrome-ext-ts"),
     path.join(__dirname, ".."),
   ];
+
   let found = false;
   for (const possiblePath of possiblePaths) {
     if (
@@ -70,16 +81,19 @@ if (
       break;
     }
   }
+
   if (!found) {
     error(
-      `Could not find template files. Looked in:\n${possiblePaths
-        .map((p) => `  - ${p}`)
-        .join("\n")}`
+      `Could not find template files.\n` +
+        `Template directory checked: ${templateDir}\n` +
+        `__dirname: ${__dirname}\n` +
+        `Please ensure the package is installed correctly.\n` +
+        `Make sure 'src' and 'manifest.json' are included in the npm package.`
     );
   }
 }
 
-// Verify template directory has required files
+// Final verification
 if (!fs.existsSync(path.join(templateDir, "src"))) {
   error(`Template directory does not contain 'src' folder: ${templateDir}`);
 }
@@ -154,23 +168,31 @@ function copyRecursive(src, dest) {
 
 // Copy files
 log("📁 Copying template files...", "blue");
+log(`  Template directory: ${templateDir}`, "blue");
 let copiedCount = 0;
 for (const item of filesToCopy) {
   const srcPath = path.join(templateDir, item);
   const destPath = path.join(projectDir, item);
 
   if (fs.existsSync(srcPath)) {
-    copyRecursive(srcPath, destPath);
-    copiedCount++;
-    log(`  ✓ Copied ${item}`, "green");
+    try {
+      copyRecursive(srcPath, destPath);
+      copiedCount++;
+      log(`  ✓ Copied ${item}`, "green");
+    } catch (err) {
+      log(`  ✗ Failed to copy ${item}: ${err.message}`, "red");
+    }
   } else {
-    log(`  ⚠ Skipped ${item} (not found)`, "yellow");
+    log(`  ⚠ Skipped ${item} (not found at ${srcPath})`, "yellow");
   }
 }
 
 if (copiedCount === 0) {
   error(
-    `No files were copied! Template directory: ${templateDir}\nPlease check that the template files exist.`
+    `No files were copied!\n` +
+      `Template directory: ${templateDir}\n` +
+      `Files checked: ${filesToCopy.join(", ")}\n` +
+      `Please verify the package was installed correctly and contains all template files.`
   );
 }
 

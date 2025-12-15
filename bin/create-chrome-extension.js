@@ -59,15 +59,32 @@ if (
     path.join(__dirname, "..", "..", "create-chrome-ext-ts"),
     path.join(__dirname, ".."),
   ];
+  let found = false;
   for (const possiblePath of possiblePaths) {
     if (
       fs.existsSync(path.join(possiblePath, "src")) &&
       fs.existsSync(path.join(possiblePath, "manifest.json"))
     ) {
       templateDir = possiblePath;
+      found = true;
       break;
     }
   }
+  if (!found) {
+    error(
+      `Could not find template files. Looked in:\n${possiblePaths
+        .map((p) => `  - ${p}`)
+        .join("\n")}`
+    );
+  }
+}
+
+// Verify template directory has required files
+if (!fs.existsSync(path.join(templateDir, "src"))) {
+  error(`Template directory does not contain 'src' folder: ${templateDir}`);
+}
+if (!fs.existsSync(path.join(templateDir, "manifest.json"))) {
+  error(`Template directory does not contain 'manifest.json': ${templateDir}`);
 }
 
 // Create project in current working directory
@@ -137,13 +154,24 @@ function copyRecursive(src, dest) {
 
 // Copy files
 log("📁 Copying template files...", "blue");
+let copiedCount = 0;
 for (const item of filesToCopy) {
   const srcPath = path.join(templateDir, item);
   const destPath = path.join(projectDir, item);
 
   if (fs.existsSync(srcPath)) {
     copyRecursive(srcPath, destPath);
+    copiedCount++;
+    log(`  ✓ Copied ${item}`, "green");
+  } else {
+    log(`  ⚠ Skipped ${item} (not found)`, "yellow");
   }
+}
+
+if (copiedCount === 0) {
+  error(
+    `No files were copied! Template directory: ${templateDir}\nPlease check that the template files exist.`
+  );
 }
 
 // Convert project name to various formats

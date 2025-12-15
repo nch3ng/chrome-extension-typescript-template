@@ -1,6 +1,27 @@
 # Chrome Extension TypeScript Template
 
-A modern template for building Chrome extensions with TypeScript, using Manifest V3.
+A modern CLI tool to generate Chrome extension projects with TypeScript, using Manifest V3.
+
+## Quick Start
+
+Generate a new Chrome extension project using npx:
+
+```bash
+npx create-chrome-ext-ts <project-name>
+```
+
+Example:
+
+```bash
+npx create-chrome-ext-ts my-awesome-extension
+```
+
+This will:
+
+- Create a new directory with your project name in the current directory
+- Copy all template files
+- Update package.json and manifest.json with your project name
+- Install npm dependencies automatically
 
 ## Features
 
@@ -33,32 +54,35 @@ A modern template for building Chrome extensions with TypeScript, using Manifest
 
 ```
 
+## Using as a Template Repository
+
+If you've cloned this repository, you can also use the local generate script:
+
+```bash
+npm run generate <project-name>
+```
+
 ## Setup
 
 1. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
-2. **Create extension icons:**
-   Create an `icons` folder and add:
-   - `icon16.png` (16x16 pixels)
-   - `icon48.png` (48x48 pixels)
-   - `icon128.png` (128x128 pixels)
+2. **Build the extension:**
 
-   Or remove the icon references from `manifest.json` if you don't need them yet.
-
-3. **Build the extension:**
    ```bash
    npm run build
    ```
 
    For development with watch mode:
+
    ```bash
    npm run dev
    ```
 
-4. **Load the extension in Chrome:**
+3. **Load the extension in Chrome:**
    - Open Chrome and navigate to `chrome://extensions/`
    - Enable "Developer mode" (toggle in top right)
    - Click "Load unpacked"
@@ -69,16 +93,18 @@ A modern template for building Chrome extensions with TypeScript, using Manifest
 - **Build:** `npm run build` - Creates production build in `dist/`
 - **Dev:** `npm run dev` - Watches for changes and rebuilds automatically
 - **Clean:** `npm run clean` - Removes the `dist` folder
+- **Generate:** `npm run generate <name>` - Creates a new project from this template
 
 ## Customization
 
 ### Adding New Scripts
 
 1. Add entry point in `webpack.config.js`:
+
    ```js
    entry: {
      // ... existing entries
-     newScript: './src/newScript.ts'
+     newScript: "./src/newScript.ts";
    }
    ```
 
@@ -89,6 +115,7 @@ A modern template for building Chrome extensions with TypeScript, using Manifest
 ### Modifying Permissions
 
 Edit the `permissions` array in `manifest.json`. Common permissions:
+
 - `storage` - For chrome.storage API
 - `activeTab` - Access to active tab
 - `tabs` - Full tabs API access
@@ -108,8 +135,20 @@ Edit the `permissions` array in `manifest.json`. Common permissions:
 - [Manifest V3 Migration Guide](https://developer.chrome.com/docs/extensions/mv3/intro/)
 - [Chrome Extension APIs](https://developer.chrome.com/docs/extensions/reference/)
 
+## Publishing
+
+To publish this package to npm:
+
+1. Update the version in `package.json`
+2. Login to npm: `npm login`
+3. Publish: `npm publish`
+
+After publishing, users can generate projects with:
+
+```bash
+npx create-chrome-ext-ts <project-name>
+```
+
 ## License
 
 MIT
-
-# chrome-extension-typescript-template

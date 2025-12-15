@@ -1,15 +1,34 @@
 {
-  "name": "readyState",
+  "name": "create-chrome-ext-ts",
   "version": "1.0.0",
-  "description": "A Chrome extension template built with TypeScript",
+  "description": "A CLI tool to generate Chrome extension projects with TypeScript and Manifest V3",
+  "bin": {
+    "create-chrome-ext-ts": "./bin/create-chrome-extension.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "manifest.json",
+    "package.json",
+    "tsconfig.json",
+    "webpack.config.js",
+    ".gitignore",
+    "README.md"
+  ],
   "scripts": {
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "generate": "node generate-project.js"
   },
   "keywords": [
     "chrome-extension",
-    "typescript"
+    "typescript",
+    "cli",
+    "generator",
+    "template",
+    "manifest-v3",
+    "webpack"
   ],
   "author": "",
   "license": "MIT",
